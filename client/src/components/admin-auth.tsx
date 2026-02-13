@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, AlertCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface AdminAuthProps {
   onAuthenticated: () => void;
@@ -19,19 +20,36 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
     setIsLoading(true);
     setError('');
 
-    // Mot de passe fixe à 6 chiffres
-    const correctPassword = '123456';
+    try {
+      const { data, error: dbError } = await supabase
+        .from('settings')
+        .select('admin_password')
+        .limit(1)
+        .single();
 
-    // Simulation d'une vérification
-    setTimeout(() => {
-      if (password === correctPassword) {
+      if (dbError) {
+        if (dbError.code === 'PGRST116') {
+          if (password === '123456') {
+            localStorage.setItem('admin_authenticated', 'true');
+            onAuthenticated();
+            return;
+          }
+        }
+        throw dbError;
+      }
+
+      if (password === data.admin_password) {
         localStorage.setItem('admin_authenticated', 'true');
         onAuthenticated();
       } else {
         setError('Mot de passe incorrect');
       }
+    } catch (err) {
+      setError('Erreur de connexion au serveur');
+      console.error('Auth error:', err);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -51,15 +69,13 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="password">Mot de passe (6 chiffres)</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••"
-                maxLength={6}
-                pattern="[0-9]{6}"
+                placeholder="Entrez le mot de passe"
                 required
                 className="text-center text-lg tracking-widest"
               />
@@ -74,7 +90,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
             
             <Button 
               type="submit" 
-              disabled={password.length !== 6 || isLoading}
+              disabled={!password || isLoading}
               className="w-full bg-swiss-blue hover:bg-blue-800"
             >
               {isLoading ? 'Vérification...' : 'Accéder'}

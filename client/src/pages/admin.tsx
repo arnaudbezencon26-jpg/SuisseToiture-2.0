@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Quote, UpdateQuote } from '@shared/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Home, Building, Calendar, MapPin, User, Phone, Mail, MessageSquare, Settings, Eye } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Home, Building, Calendar, MapPin, User, Phone, Mail, MessageSquare, Settings as SettingsIcon, Eye, Lock, Send, FileText, Save } from 'lucide-react';
+import { supabase, rowToQuote, rowToSettings, type Quote, type Settings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -38,23 +39,289 @@ const projectTypeLabels = {
   immeuble: 'Immeuble'
 };
 
-// Composant séparé pour la partie authentifiée
+function SettingsPanel() {
+  const { toast } = useToast();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [clientTemplate, setClientTemplate] = useState('');
+  const [adminTemplate, setAdminTemplate] = useState('');
+  const [activeTab, setActiveTab] = useState('password');
+
+  const { data: settings, isLoading: settingsLoading } = useQuery<Settings | null>({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('settings').select('*').limit(1).single();
+      if (error) {
+        if (error.code === 'PGRST116') {
+          const { data: newData, error: insertError } = await supabase.from('settings').insert({}).select().single();
+          if (insertError) throw insertError;
+          return rowToSettings(newData);
+        }
+        throw error;
+      }
+      return rowToSettings(data);
+    },
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setAdminEmail(settings.adminEmail || '');
+      setClientTemplate(settings.clientEmailTemplate);
+      setAdminTemplate(settings.adminEmailTemplate);
+    }
+  }, [settings]);
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async () => {
+      if (!settings) throw new Error('Settings not loaded');
+      if (currentPassword !== settings.adminPassword) throw new Error('Mot de passe actuel incorrect');
+      if (newPassword !== confirmPassword) throw new Error('Les mots de passe ne correspondent pas');
+      if (newPassword.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+      
+      const { error } = await supabase.from('settings').update({ admin_password: newPassword, updated_at: new Date().toISOString() }).eq('id', settings.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Mot de passe modifié", description: "Le mot de passe admin a été mis à jour." });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!settings) throw new Error('Settings not loaded');
+      const { error } = await supabase.from('settings').update({ admin_email: adminEmail || null, updated_at: new Date().toISOString() }).eq('id', settings.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Email mis à jour", description: "L'adresse email a été enregistrée." });
+    },
+    onError: () => {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'email.", variant: "destructive" });
+    },
+  });
+
+  const updateTemplatesMutation = useMutation({
+    mutationFn: async () => {
+      if (!settings) throw new Error('Settings not loaded');
+      const { error } = await supabase.from('settings').update({
+        client_email_template: clientTemplate,
+        admin_email_template: adminTemplate,
+        updated_at: new Date().toISOString(),
+      }).eq('id', settings.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Templates sauvegardés", description: "Les templates d'email ont été mis à jour." });
+    },
+    onError: () => {
+      toast({ title: "Erreur", description: "Impossible de sauvegarder les templates.", variant: "destructive" });
+    },
+  });
+
+  if (settingsLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-swiss-blue"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="password" className="flex items-center gap-2">
+            <Lock className="w-4 h-4" />
+            Mot de passe
+          </TabsTrigger>
+          <TabsTrigger value="email" className="flex items-center gap-2">
+            <Send className="w-4 h-4" />
+            Email
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Templates
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="password">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                Modifier le mot de passe admin
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="current-password">Mot de passe actuel</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Entrez le mot de passe actuel"
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 6 caractères"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirm-password">Confirmer le nouveau mot de passe</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmez le mot de passe"
+                />
+              </div>
+              <Button
+                onClick={() => updatePasswordMutation.mutate()}
+                disabled={!currentPassword || !newPassword || !confirmPassword || updatePasswordMutation.isPending}
+                className="w-full bg-swiss-blue hover:bg-blue-800"
+              >
+                {updatePasswordMutation.isPending ? 'Modification...' : 'Modifier le mot de passe'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Configuration email
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="admin-email">Email de l'administrateur</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@suissetoiture.ch"
+                />
+                <p className="text-xs text-swiss-slate mt-1">
+                  Cet email recevra une notification pour chaque nouveau devis. Un email de confirmation sera aussi envoyé au client.
+                </p>
+              </div>
+              <Button
+                onClick={() => updateEmailMutation.mutate()}
+                disabled={updateEmailMutation.isPending}
+                className="w-full bg-swiss-blue hover:bg-blue-800"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {updateEmailMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder l\'email'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Template email client (confirmation)
+                </CardTitle>
+                <p className="text-sm text-swiss-slate">
+                  Variables disponibles : {"{{prenom}}"}, {"{{nom}}"}, {"{{projectType}}"}, {"{{service}}"}, {"{{superficie}}"}, {"{{adresse}}"}, {"{{email}}"}, {"{{telephone}}"}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={clientTemplate}
+                  onChange={(e) => setClientTemplate(e.target.value)}
+                  rows={12}
+                  className="font-mono text-sm"
+                  placeholder="Template HTML pour l'email de confirmation client..."
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Template email admin (notification)
+                </CardTitle>
+                <p className="text-sm text-swiss-slate">
+                  Variables disponibles : {"{{prenom}}"}, {"{{nom}}"}, {"{{projectType}}"}, {"{{service}}"}, {"{{superficie}}"}, {"{{adresse}}"}, {"{{email}}"}, {"{{telephone}}"}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={adminTemplate}
+                  onChange={(e) => setAdminTemplate(e.target.value)}
+                  rows={12}
+                  className="font-mono text-sm"
+                  placeholder="Template HTML pour la notification admin..."
+                />
+              </CardContent>
+            </Card>
+
+            <Button
+              onClick={() => updateTemplatesMutation.mutate()}
+              disabled={updateTemplatesMutation.isPending}
+              className="w-full bg-swiss-blue hover:bg-blue-800"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {updateTemplatesMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder les templates'}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeView, setActiveView] = useState<'quotes' | 'settings'>('quotes');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: quotes = [], isLoading } = useQuery<Quote[]>({
-    queryKey: ['/api/quotes'],
+    queryKey: ['quotes'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('quotes').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(rowToQuote);
+    },
   });
 
   const updateQuoteMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: number; updates: UpdateQuote }) => {
-      return apiRequest('PATCH', `/api/quotes/${id}`, updates);
+    mutationFn: async ({ id, updates }: { id: number; updates: { status: string; notes?: string } }) => {
+      const { error } = await supabase.from('quotes').update({
+        status: updates.status,
+        notes: updates.notes || null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast({
         title: "Devis mis à jour",
         description: "Le statut du devis a été modifié avec succès.",
@@ -86,7 +353,7 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
     
     updateQuoteMutation.mutate({
       id: selectedQuote.id,
-      updates: { status: status as 'en_attente' | 'traite' | 'annule', notes }
+      updates: { status, notes }
     });
   };
 
@@ -103,23 +370,37 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-swiss-blue rounded-lg flex items-center justify-center">
-                <Settings className="w-5 h-5 text-white" />
+                <SettingsIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Administration SuisseToiture®️</h1>
+                <h1 className="text-xl font-bold text-gray-900">Administration SuisseToiture</h1>
                 <p className="text-sm text-swiss-slate">Gestion des demandes de devis</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="text-swiss-blue border-swiss-blue">
-                {stats.total} demande{stats.total > 1 ? 's' : ''}
-              </Badge>
+              <Button
+                variant={activeView === 'quotes' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveView('quotes')}
+                className={activeView === 'quotes' ? 'bg-swiss-blue hover:bg-blue-800' : ''}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Devis
+              </Button>
+              <Button
+                variant={activeView === 'settings' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveView('settings')}
+                className={activeView === 'settings' ? 'bg-swiss-blue hover:bg-blue-800' : ''}
+              >
+                <SettingsIcon className="w-4 h-4 mr-2" />
+                Réglages
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -134,193 +415,196 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-swiss-slate">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Home className="w-5 h-5 text-swiss-blue" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-swiss-slate">En attente</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.en_attente}</p>
-                </div>
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-yellow-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-swiss-slate">Traités</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.traite}</p>
-                </div>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-swiss-slate">Annulés</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.annule}</p>
-                </div>
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Building className="w-5 h-5 text-red-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Demandes de devis</h2>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filtrer par statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="en_attente">En attente</SelectItem>
-              <SelectItem value="traite">Traité</SelectItem>
-              <SelectItem value="annule">Annulé</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Quotes List */}
-        <div className="grid gap-6">
-          {filteredQuotes.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune demande</h3>
-                <p className="text-swiss-slate">
-                  {statusFilter === 'all' 
-                    ? "Aucune demande de devis n'a été soumise pour le moment."
-                    : `Aucune demande avec le statut "${statusLabels[statusFilter as keyof typeof statusLabels]}" trouvée.`
-                  }
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredQuotes.map((quote) => (
-              <Card key={quote.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
+        {activeView === 'settings' ? (
+          <SettingsPanel />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        {quote.projectType === 'maison' ? (
-                          <Home className="w-5 h-5 text-swiss-blue" />
-                        ) : (
-                          <Building className="w-5 h-5 text-swiss-blue" />
-                        )}
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          Devis #{quote.id} - {projectTypeLabels[quote.projectType as keyof typeof projectTypeLabels]}
-                        </CardTitle>
-                        <p className="text-sm text-swiss-slate">
-                          {format(new Date(quote.createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-                        </p>
-                      </div>
+                    <div>
+                      <p className="text-sm font-medium text-swiss-slate">Total</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge className={statusColors[quote.status as keyof typeof statusColors]}>
-                        {statusLabels[quote.status as keyof typeof statusLabels]}
-                      </Badge>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setSelectedQuote(quote)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Voir détails
-                          </Button>
-                        </DialogTrigger>
-                        <QuoteDetailDialog 
-                          quote={selectedQuote} 
-                          onUpdate={handleUpdateQuote}
-                          isUpdating={updateQuoteMutation.isPending}
-                        />
-                      </Dialog>
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Home className="w-5 h-5 text-swiss-blue" />
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center text-sm text-swiss-slate">
-                      <Settings className="w-4 h-4 mr-2 text-swiss-blue" />
-                      <span>{serviceLabels[quote.service as keyof typeof serviceLabels]}</span>
-                      <span className="mx-2">•</span>
-                      <span>{quote.subServices.join(', ')}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-swiss-slate">
-                      <Home className="w-4 h-4 mr-2 text-swiss-blue" />
-                      <span>{quote.superficie} m²</span>
-                    </div>
-                    {quote.adresse && (
-                      <div className="flex items-center text-sm text-swiss-slate">
-                        <MapPin className="w-4 h-4 mr-2 text-swiss-blue" />
-                        <span className="truncate">{quote.adresse}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {quote.email && (
-                      <div className="flex items-center text-sm text-swiss-slate">
-                        <Mail className="w-4 h-4 mr-2 text-swiss-blue" />
-                        <span className="truncate">{quote.email}</span>
-                      </div>
-                    )}
-                    {quote.telephone && (
-                      <div className="flex items-center text-sm text-swiss-slate">
-                        <Phone className="w-4 h-4 mr-2 text-swiss-blue" />
-                        <span>{quote.telephone}</span>
-                      </div>
-                    )}
-                    {quote.whatsapp && (
-                      <div className="flex items-center text-sm text-swiss-slate">
-                        <MessageSquare className="w-4 h-4 mr-2 text-swiss-blue" />
-                        <span>{quote.whatsapp}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {quote.notes && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-swiss-slate"><strong>Notes :</strong> {quote.notes}</p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-swiss-slate">En attente</p>
+                      <p className="text-2xl font-bold text-yellow-600">{stats.en_attente}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-yellow-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-swiss-slate">Traités</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.traite}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <SettingsIcon className="w-5 h-5 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-swiss-slate">Annulés</p>
+                      <p className="text-2xl font-bold text-red-600">{stats.annule}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                      <Building className="w-5 h-5 text-red-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Demandes de devis</h2>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filtrer par statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="en_attente">En attente</SelectItem>
+                  <SelectItem value="traite">Traité</SelectItem>
+                  <SelectItem value="annule">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-6">
+              {filteredQuotes.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune demande</h3>
+                    <p className="text-swiss-slate">
+                      {statusFilter === 'all' 
+                        ? "Aucune demande de devis n'a été soumise pour le moment."
+                        : `Aucune demande avec le statut "${statusLabels[statusFilter as keyof typeof statusLabels]}" trouvée.`
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredQuotes.map((quote) => (
+                  <Card key={quote.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            {quote.projectType === 'maison' ? (
+                              <Home className="w-5 h-5 text-swiss-blue" />
+                            ) : (
+                              <Building className="w-5 h-5 text-swiss-blue" />
+                            )}
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">
+                              Devis #{quote.id} - {projectTypeLabels[quote.projectType as keyof typeof projectTypeLabels]}
+                            </CardTitle>
+                            <p className="text-sm text-swiss-slate">
+                              {format(new Date(quote.createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Badge className={statusColors[quote.status as keyof typeof statusColors]}>
+                            {statusLabels[quote.status as keyof typeof statusLabels]}
+                          </Badge>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedQuote(quote)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                Voir détails
+                              </Button>
+                            </DialogTrigger>
+                            <QuoteDetailDialog 
+                              quote={selectedQuote} 
+                              onUpdate={handleUpdateQuote}
+                              isUpdating={updateQuoteMutation.isPending}
+                            />
+                          </Dialog>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center text-sm text-swiss-slate">
+                          <SettingsIcon className="w-4 h-4 mr-2 text-swiss-blue" />
+                          <span>{serviceLabels[quote.service as keyof typeof serviceLabels]}</span>
+                          <span className="mx-2">&bull;</span>
+                          <span>{quote.subServices.join(', ')}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-swiss-slate">
+                          <Home className="w-4 h-4 mr-2 text-swiss-blue" />
+                          <span>{quote.superficie} m&sup2;</span>
+                        </div>
+                        {quote.adresse && (
+                          <div className="flex items-center text-sm text-swiss-slate">
+                            <MapPin className="w-4 h-4 mr-2 text-swiss-blue" />
+                            <span className="truncate">{quote.adresse}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {quote.email && (
+                          <div className="flex items-center text-sm text-swiss-slate">
+                            <Mail className="w-4 h-4 mr-2 text-swiss-blue" />
+                            <span className="truncate">{quote.email}</span>
+                          </div>
+                        )}
+                        {quote.telephone && (
+                          <div className="flex items-center text-sm text-swiss-slate">
+                            <Phone className="w-4 h-4 mr-2 text-swiss-blue" />
+                            <span>{quote.telephone}</span>
+                          </div>
+                        )}
+                        {quote.whatsapp && (
+                          <div className="flex items-center text-sm text-swiss-slate">
+                            <MessageSquare className="w-4 h-4 mr-2 text-swiss-blue" />
+                            <span>{quote.whatsapp}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {quote.notes && (
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-swiss-slate"><strong>Notes :</strong> {quote.notes}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
