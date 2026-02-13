@@ -6,14 +6,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/send-email", async (req, res) => {
     const { clientEmail, clientName, quoteData } = req.body;
 
-    const smtpHost = process.env.SMTP_HOST;
+    const smtpHost = process.env.SMTP_HOST || "mail.infomaniak.com";
     const smtpPort = parseInt(process.env.SMTP_PORT || "465");
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
     const smtpFrom = process.env.SMTP_FROM || smtpUser;
     const adminEmail = process.env.ADMIN_EMAIL;
 
-    if (!smtpHost || !smtpUser || !smtpPass) {
+    if (!smtpUser || !smtpPass) {
       console.warn("SMTP not configured, skipping email send");
       return res.json({ success: false, message: "SMTP non configuré" });
     }
