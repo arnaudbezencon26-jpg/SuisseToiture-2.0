@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Home, Building, Building2, Leaf, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 const initialFormData: FormData = {
@@ -46,6 +47,7 @@ export function StepWizard() {
 
   const submitQuoteMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      const adresse = [data.numero, data.rue, data.codePostal, data.ville].filter(Boolean).join(" ");
       const { error } = await supabase.from('quotes').insert({
         project_type: data.projectType,
         service: data.service,
@@ -57,13 +59,33 @@ export function StepWizard() {
         numero: data.numero || null,
         code_postal: data.codePostal || null,
         ville: data.ville || null,
-        adresse: `${data.numero} ${data.rue}, ${data.codePostal} ${data.ville}` || null,
+        adresse: adresse || null,
         email: data.email || null,
         telephone: data.telephone || null,
         whatsapp: data.whatsapp || null,
         status: 'en_attente',
       });
       if (error) throw error;
+
+      try {
+        await apiRequest('POST', '/api/send-email', {
+          clientEmail: data.email || null,
+          clientName: [data.prenom, data.nom].filter(Boolean).join(" "),
+          quoteData: {
+            projectType: data.projectType,
+            service: data.service,
+            subServices: data.subServices,
+            superficie: data.superficie,
+            adresse: adresse,
+            prenom: data.prenom,
+            nom: data.nom,
+            email: data.email,
+            telephone: data.telephone,
+          },
+        });
+      } catch {
+        console.warn('Email notification could not be sent');
+      }
     },
     onSuccess: () => {
       toast({
