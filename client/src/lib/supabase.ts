@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+}
+
+export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
 
 export type QuoteRow = {
   id: number;
@@ -24,15 +28,6 @@ export type QuoteRow = {
   status: string;
   notes: string | null;
   created_at: string;
-  updated_at: string;
-};
-
-export type SettingsRow = {
-  id: number;
-  admin_password: string;
-  admin_email: string | null;
-  client_email_template: string;
-  admin_email_template: string;
   updated_at: string;
 };
 
@@ -84,20 +79,30 @@ export function rowToQuote(row: QuoteRow): Quote {
 
 export type Settings = {
   id: number;
-  adminPassword: string;
   adminEmail: string | null;
   clientEmailTemplate: string;
   adminEmailTemplate: string;
   updatedAt: string;
 };
 
-export function rowToSettings(row: SettingsRow): Settings {
+export function rowToSettings(row: { id: number; admin_email: string | null; client_email_template: string; admin_email_template: string; updated_at: string }): Settings {
   return {
     id: row.id,
-    adminPassword: row.admin_password,
     adminEmail: row.admin_email,
     clientEmailTemplate: row.client_email_template,
     adminEmailTemplate: row.admin_email_template,
     updatedAt: row.updated_at,
   };
+}
+
+export function getAdminPassword(): string {
+  return sessionStorage.getItem('admin_pwd') || '';
+}
+
+export function setAdminPassword(pwd: string): void {
+  sessionStorage.setItem('admin_pwd', pwd);
+}
+
+export function clearAdminPassword(): void {
+  sessionStorage.removeItem('admin_pwd');
 }

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Home, Building, Calendar, MapPin, User, Phone, Mail, MessageSquare, Settings as SettingsIcon, Eye, Lock, Send, FileText, Save } from 'lucide-react';
-import { supabase, rowToQuote, rowToSettings, type Quote, type Settings } from '@/lib/supabase';
+import { supabase, rowToQuote, rowToSettings, getAdminPassword, setAdminPassword, clearAdminPassword, type Quote, type Settings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -49,19 +49,15 @@ function SettingsPanel() {
   const [adminTemplate, setAdminTemplate] = useState('');
   const [activeTab, setActiveTab] = useState('password');
 
+  const pwd = getAdminPassword();
+
   const { data: settings, isLoading: settingsLoading } = useQuery<Settings | null>({
     queryKey: ['settings'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('settings').select('*').limit(1).single();
-      if (error) {
-        if (error.code === 'PGRST116') {
-          const { data: newData, error: insertError } = await supabase.from('settings').insert({}).select().single();
-          if (insertError) throw insertError;
-          return rowToSettings(newData);
-        }
-        throw error;
-      }
-      return rowToSettings(data);
+      const { data, error } = await supabase.rpc('get_admin_settings', { input_password: pwd });
+      if (error) throw error;
+      if (!data || data.length === 0) return null;
+      return rowToSettings(data[0]);
     },
   });
 
@@ -75,15 +71,16 @@ function SettingsPanel() {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
-      if (!settings) throw new Error('Settings not loaded');
-      if (currentPassword !== settings.adminPassword) throw new Error('Mot de passe actuel incorrect');
       if (newPassword !== confirmPassword) throw new Error('Les mots de passe ne correspondent pas');
-      if (newPassword.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères');
-      
-      const { error } = await supabase.from('settings').update({ admin_password: newPassword, updated_at: new Date().toISOString() }).eq('id', settings.id);
-      if (error) throw error;
+      const { error } = await supabase.rpc('update_admin_password', {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      if (error) throw new Error(error.message);
+      return newPassword;
     },
-    onSuccess: () => {
+    onSuccess: (updatedPassword: string) => {
+      setAdminPassword(updatedPassword);
       toast({ title: "Mot de passe modifié", description: "Le mot de passe admin a été mis à jour." });
       setCurrentPassword('');
       setNewPassword('');
@@ -96,8 +93,10 @@ function SettingsPanel() {
 
   const updateEmailMutation = useMutation({
     mutationFn: async () => {
-      if (!settings) throw new Error('Settings not loaded');
-      const { error } = await supabase.from('settings').update({ admin_email: adminEmail || null, updated_at: new Date().toISOString() }).eq('id', settings.id);
+      const { error } = await supabase.rpc('update_admin_email', {
+        input_password: pwd,
+        new_email: adminEmail || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -110,12 +109,11 @@ function SettingsPanel() {
 
   const updateTemplatesMutation = useMutation({
     mutationFn: async () => {
-      if (!settings) throw new Error('Settings not loaded');
-      const { error } = await supabase.from('settings').update({
-        client_email_template: clientTemplate,
-        admin_email_template: adminTemplate,
-        updated_at: new Date().toISOString(),
-      }).eq('id', settings.id);
+      const { error } = await supabase.rpc('update_email_templates', {
+        input_password: pwd,
+        new_client_template: clientTemplate,
+        new_admin_template: adminTemplate,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -302,10 +300,12 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const pwd = getAdminPassword();
+
   const { data: quotes = [], isLoading } = useQuery<Quote[]>({
     queryKey: ['quotes'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('quotes').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_quotes', { input_password: pwd });
       if (error) throw error;
       return (data || []).map(rowToQuote);
     },
@@ -313,11 +313,12 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
 
   const updateQuoteMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: { status: string; notes?: string } }) => {
-      const { error } = await supabase.from('quotes').update({
-        status: updates.status,
-        notes: updates.notes || null,
-        updated_at: new Date().toISOString(),
-      }).eq('id', id);
+      const { error } = await supabase.rpc('update_quote', {
+        input_password: pwd,
+        quote_id: id,
+        new_status: updates.status,
+        new_notes: updates.notes || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -610,29 +611,49 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-// Composant principal qui gère l'authentification
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà authentifié
-    const authStatus = localStorage.getItem('admin_authenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
+    const verifySession = async () => {
+      const pwd = getAdminPassword();
+      if (!pwd) {
+        setIsVerifying(false);
+        return;
+      }
+      try {
+        const { data } = await supabase.rpc('verify_admin_password', { input_password: pwd });
+        if (data === true) {
+          setIsAuthenticated(true);
+        } else {
+          clearAdminPassword();
+        }
+      } catch {
+        clearAdminPassword();
+      }
+      setIsVerifying(false);
+    };
+    verifySession();
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_authenticated');
+    clearAdminPassword();
     setIsAuthenticated(false);
   };
 
-  // Afficher la page d'authentification si pas connecté
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-swiss-blue"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
   }
 
-  // Afficher la page admin authentifiée
   return <AuthenticatedAdminPage onLogout={handleLogout} />;
 }
 

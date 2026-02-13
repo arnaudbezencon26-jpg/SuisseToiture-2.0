@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, setAdminPassword } from '@/lib/supabase';
 
 interface AdminAuthProps {
   onAuthenticated: () => void;
@@ -21,25 +21,14 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
     setError('');
 
     try {
-      const { data, error: dbError } = await supabase
-        .from('settings')
-        .select('admin_password')
-        .limit(1)
-        .single();
+      const { data, error: rpcError } = await supabase.rpc('verify_admin_password', {
+        input_password: password,
+      });
 
-      if (dbError) {
-        if (dbError.code === 'PGRST116') {
-          if (password === '123456') {
-            localStorage.setItem('admin_authenticated', 'true');
-            onAuthenticated();
-            return;
-          }
-        }
-        throw dbError;
-      }
+      if (rpcError) throw rpcError;
 
-      if (password === data.admin_password) {
-        localStorage.setItem('admin_authenticated', 'true');
+      if (data === true) {
+        setAdminPassword(password);
         onAuthenticated();
       } else {
         setError('Mot de passe incorrect');
