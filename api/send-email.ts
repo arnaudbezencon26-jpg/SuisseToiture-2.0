@@ -12,8 +12,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const smtpPort = parseInt(process.env.SMTP_PORT || '465');
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
   const adminEmail = process.env.ADMIN_EMAIL;
+  const smtpFrom = adminEmail || smtpUser;
 
   if (!smtpUser || !smtpPass) {
     console.warn('SMTP not configured, skipping email send');
