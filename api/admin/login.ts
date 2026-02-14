@@ -1,5 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPool } from '../_db';
+import pg from 'pg';
+const { Pool } = pg;
+
+let pool: pg.Pool | null = null;
+function getPool(): pg.Pool {
+  if (!pool) {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5 });
+  }
+  return pool;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -7,12 +16,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { password } = req.body;
-  const pool = getPool();
+  const db = getPool();
 
   try {
-    const result = await pool.query(
-      `SELECT admin_password FROM settings LIMIT 1`
-    );
+    const result = await db.query(`SELECT admin_password FROM settings LIMIT 1`);
     if (result.rows.length === 0) {
       return res.json({ success: false });
     }

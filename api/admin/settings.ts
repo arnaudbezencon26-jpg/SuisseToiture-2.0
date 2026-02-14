@@ -1,23 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPool } from '../_db';
+import pg from 'pg';
+const { Pool } = pg;
 
-async function verifyPassword(pool: any, password: string): Promise<boolean> {
-  const result = await pool.query(`SELECT admin_password FROM settings LIMIT 1`);
+let pool: pg.Pool | null = null;
+function getPool(): pg.Pool {
+  if (!pool) {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5 });
+  }
+  return pool;
+}
+
+async function verifyPassword(db: pg.Pool, password: string): Promise<boolean> {
+  const result = await db.query(`SELECT admin_password FROM settings LIMIT 1`);
   if (result.rows.length === 0) return false;
   return result.rows[0].admin_password === password;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const pool = getPool();
+  const db = getPool();
 
   if (req.method === 'POST') {
     const { password } = req.body;
-    if (!await verifyPassword(pool, password)) {
+    if (!await verifyPassword(db, password)) {
       return res.status(401).json({ message: 'Mot de passe invalide' });
     }
 
     try {
-      const result = await pool.query(
+      const result = await db.query(
         `SELECT id, admin_email, client_email_template, admin_email_template, updated_at FROM settings LIMIT 1`
       );
       if (result.rows.length === 0) {
@@ -30,26 +39,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } else if (req.method === 'PATCH') {
     const { password, type, ...data } = req.body;
-    if (!await verifyPassword(pool, password)) {
+    if (!await verifyPassword(db, password)) {
       return res.status(401).json({ message: 'Mot de passe invalide' });
     }
 
     try {
       if (type === 'password') {
         const { currentPassword, newPassword } = data;
-        const check = await pool.query(`SELECT admin_password FROM settings LIMIT 1`);
+        const check = await db.query(`SELECT admin_password FROM settings LIMIT 1`);
         if (check.rows.length === 0 || check.rows[0].admin_password !== currentPassword) {
           return res.status(400).json({ message: 'Mot de passe actuel incorrect' });
         }
-        await pool.query(`UPDATE settings SET admin_password = $1, updated_at = NOW()`, [newPassword]);
+        await db.query(`UPDATE settings SET admin_password = $1, updated_at = NOW()`, [newPassword]);
         res.json({ success: true });
       } else if (type === 'email') {
         const { adminEmail } = data;
-        await pool.query(`UPDATE settings SET admin_email = $1, updated_at = NOW()`, [adminEmail || null]);
+        await db.query(`UPDATE settings SET admin_email = $1, updated_at = NOW()`, [adminEmail || null]);
         res.json({ success: true });
       } else if (type === 'templates') {
         const { clientTemplate, adminTemplate } = data;
-        await pool.query(
+        await db.query(
           `UPDATE settings SET client_email_template = $1, admin_email_template = $2, updated_at = NOW()`,
           [clientTemplate, adminTemplate]
         );
