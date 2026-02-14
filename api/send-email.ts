@@ -80,7 +80,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </ul>`;
 
   try {
-    const emailPromises = [];
+    const emailPromises: Promise<any>[] = [];
 
     if (clientEmail) {
       emailPromises.push(
