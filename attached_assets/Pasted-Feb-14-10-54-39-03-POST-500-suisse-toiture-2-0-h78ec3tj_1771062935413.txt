@@ -1,0 +1,47 @@
+Feb 14 10:54:39.03
+POST
+500
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/api/admin/login
+Login error: Error: getaddrinfo ENOTFOUND db.zocmvwjusrmjajmrorup.supabase.co at /var/task/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:103:5) at async Object.handler (/vercel/path0/api/admin/login.ts:22:20) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10042) { errno: -3007, code: 'ENOTFOUND', syscall: 'getaddrinfo', hostname: 'db.zocmvwjusrmjajmrorup.supabase.co' }
+Feb 14 10:54:36.94
+POST
+500
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/api/admin/login
+Login error: Error: getaddrinfo ENOTFOUND db.zocmvwjusrmjajmrorup.supabase.co at /var/task/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:103:5) at async Object.handler (/vercel/path0/api/admin/login.ts:22:20) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10042) { errno: -3007, code: 'ENOTFOUND', syscall: 'getaddrinfo', hostname: 'db.zocmvwjusrmjajmrorup.supabase.co' }
+Feb 14 10:54:30.69
+GET
+401
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/admin
+Feb 14 10:54:29.96
+POST
+500
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/api/admin/login
+Login error: Error: getaddrinfo ENOTFOUND db.zocmvwjusrmjajmrorup.supabase.co at /var/task/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:103:5) at async Object.handler (/vercel/path0/api/admin/login.ts:22:20) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10042) { errno: -3007, code: 'ENOTFOUND', syscall: 'getaddrinfo', hostname: 'db.zocmvwjusrmjajmrorup.supabase.co' }
+Feb 14 10:54:15.08
+GET
+307
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/
+Feb 14 10:54:14.67
+GET
+401
+suisse-toiture-2-0-h78ec3tjb-arnaudbezencon26s-projects.vercel.app
+/
+No more logs to show within selected timeline
+
+Logs
+1 Error
+
+Login error: Error: getaddrinfo ENOTFOUND db.zocmvwjusrmjajmrorup.supabase.co
+    at /var/task/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async Object.handler (/vercel/path0/api/admin/login.ts:22:20)
+    at async r (/opt/rust/nodejs.js:2:15572)
+    at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594)
+    at async Server.<anonymous> (/opt/rust/nodejs.js:17:10042) {
+  errno: -3007,
+  code: 'ENOTFOUND',
