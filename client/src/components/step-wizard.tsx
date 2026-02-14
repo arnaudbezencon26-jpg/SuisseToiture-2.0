@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Home, Building, Building2, Leaf, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,7 +47,8 @@ export function StepWizard() {
   const submitQuoteMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const adresse = [data.numero, data.rue, data.codePostal, data.ville].filter(Boolean).join(" ");
-      const { error } = await supabase.from('quotes').insert({
+      
+      await apiRequest('POST', '/api/quotes', {
         project_type: data.projectType,
         service: data.service,
         sub_services: data.subServices,
@@ -63,9 +63,7 @@ export function StepWizard() {
         email: data.email || null,
         telephone: data.telephone || null,
         whatsapp: data.whatsapp || null,
-        status: 'en_attente',
       });
-      if (error) throw error;
 
       try {
         await apiRequest('POST', '/api/send-email', {

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, AlertCircle } from 'lucide-react';
-import { supabase, setAdminPassword } from '@/lib/supabase';
+import { setAdminPassword } from '@/lib/supabase';
 
 interface AdminAuthProps {
   onAuthenticated: () => void;
@@ -21,13 +21,14 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
     setError('');
 
     try {
-      const { data, error: rpcError } = await supabase.rpc('verify_admin_password', {
-        input_password: password,
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
+      const data = await res.json();
 
-      if (rpcError) throw rpcError;
-
-      if (data === true) {
+      if (data.success) {
         setAdminPassword(password);
         onAuthenticated();
       } else {

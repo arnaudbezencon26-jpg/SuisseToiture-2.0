@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Home, Building, Calendar, MapPin, User, Phone, Mail, MessageSquare, Settings as SettingsIcon, Eye, Lock, Send, FileText, Save } from 'lucide-react';
-import { supabase, rowToQuote, rowToSettings, getAdminPassword, setAdminPassword, clearAdminPassword, type Quote, type Settings } from '@/lib/supabase';
+import { rowToQuote, rowToSettings, getAdminPassword, setAdminPassword, clearAdminPassword, type Quote, type Settings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -54,10 +54,14 @@ function SettingsPanel() {
   const { data: settings, isLoading: settingsLoading } = useQuery<Settings | null>({
     queryKey: ['settings'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_admin_settings', { input_password: pwd });
-      if (error) throw error;
-      if (!data || data.length === 0) return null;
-      return rowToSettings(data[0]);
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+      });
+      if (!res.ok) throw new Error('Failed to load settings');
+      const data = await res.json();
+      return rowToSettings(data);
     },
   });
 
@@ -72,11 +76,15 @@ function SettingsPanel() {
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
       if (newPassword !== confirmPassword) throw new Error('Les mots de passe ne correspondent pas');
-      const { error } = await supabase.rpc('update_admin_password', {
-        current_password: currentPassword,
-        new_password: newPassword,
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, type: 'password', currentPassword, newPassword }),
       });
-      if (error) throw new Error(error.message);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Erreur lors de la modification');
+      }
       return newPassword;
     },
     onSuccess: (updatedPassword: string) => {
@@ -93,11 +101,12 @@ function SettingsPanel() {
 
   const updateEmailMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('update_admin_email', {
-        input_password: pwd,
-        new_email: adminEmail || null,
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, type: 'email', adminEmail: adminEmail || null }),
       });
-      if (error) throw error;
+      if (!res.ok) throw new Error('Failed to update email');
     },
     onSuccess: () => {
       toast({ title: "Email mis à jour", description: "L'adresse email a été enregistrée." });
@@ -109,12 +118,12 @@ function SettingsPanel() {
 
   const updateTemplatesMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('update_email_templates', {
-        input_password: pwd,
-        new_client_template: clientTemplate,
-        new_admin_template: adminTemplate,
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, type: 'templates', clientTemplate, adminTemplate }),
       });
-      if (error) throw error;
+      if (!res.ok) throw new Error('Failed to update templates');
     },
     onSuccess: () => {
       toast({ title: "Templates sauvegardés", description: "Les templates d'email ont été mis à jour." });
@@ -305,21 +314,25 @@ function AuthenticatedAdminPage({ onLogout }: { onLogout: () => void }) {
   const { data: quotes = [], isLoading } = useQuery<Quote[]>({
     queryKey: ['quotes'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_quotes', { input_password: pwd });
-      if (error) throw error;
+      const res = await fetch('/api/admin/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+      });
+      if (!res.ok) throw new Error('Failed to load quotes');
+      const data = await res.json();
       return (data || []).map(rowToQuote);
     },
   });
 
   const updateQuoteMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: { status: string; notes?: string } }) => {
-      const { error } = await supabase.rpc('update_quote', {
-        input_password: pwd,
-        quote_id: id,
-        new_status: updates.status,
-        new_notes: updates.notes || null,
+      const res = await fetch('/api/admin/quotes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, id, status: updates.status, notes: updates.notes || null }),
       });
-      if (error) throw error;
+      if (!res.ok) throw new Error('Failed to update quote');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -623,8 +636,13 @@ export default function AdminPage() {
         return;
       }
       try {
-        const { data } = await supabase.rpc('verify_admin_password', { input_password: pwd });
-        if (data === true) {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd }),
+        });
+        const result = await res.json();
+        if (result.success) {
           setIsAuthenticated(true);
         } else {
           clearAdminPassword();

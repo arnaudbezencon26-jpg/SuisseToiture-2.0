@@ -1,36 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
-}
-
-export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
-
-export type QuoteRow = {
-  id: number;
-  project_type: string;
-  service: string;
-  sub_services: string[];
-  superficie: number;
-  nom: string | null;
-  prenom: string | null;
-  rue: string | null;
-  numero: string | null;
-  code_postal: string | null;
-  ville: string | null;
-  adresse: string | null;
-  email: string | null;
-  telephone: string | null;
-  whatsapp: string | null;
-  status: string;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
 export type Quote = {
   id: number;
   projectType: string;
@@ -53,7 +20,15 @@ export type Quote = {
   updatedAt: string;
 };
 
-export function rowToQuote(row: QuoteRow): Quote {
+export type Settings = {
+  id: number;
+  adminEmail: string | null;
+  clientEmailTemplate: string;
+  adminEmailTemplate: string;
+  updatedAt: string;
+};
+
+export function rowToQuote(row: any): Quote {
   return {
     id: row.id,
     projectType: row.project_type,
@@ -77,15 +52,7 @@ export function rowToQuote(row: QuoteRow): Quote {
   };
 }
 
-export type Settings = {
-  id: number;
-  adminEmail: string | null;
-  clientEmailTemplate: string;
-  adminEmailTemplate: string;
-  updatedAt: string;
-};
-
-export function rowToSettings(row: { id: number; admin_email: string | null; client_email_template: string; admin_email_template: string; updated_at: string }): Settings {
+export function rowToSettings(row: any): Settings {
   return {
     id: row.id,
     adminEmail: row.admin_email,
