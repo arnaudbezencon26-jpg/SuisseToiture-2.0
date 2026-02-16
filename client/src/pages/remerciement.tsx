@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Footer } from '@/components/footer';
@@ -6,6 +7,12 @@ import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
 import { useSEO } from '@/hooks/use-seo';
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
 export default function RemerciementPage() {
   useSEO({
     title: 'Merci pour votre demande',
@@ -13,6 +20,20 @@ export default function RemerciementPage() {
     canonical: 'https://suissetoiture.ch/remerciement',
     noindex: true,
   });
+
+  useEffect(() => {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'virtualPageview',
+      pagePath: '/remerciement',
+      pageTitle: 'Merci pour votre demande',
+    });
+    window.dataLayer.push({
+      event: 'conversion',
+      conversionType: 'devis_envoye',
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-swiss-light">
       <header className="bg-white shadow-sm border-b border-gray-100">
