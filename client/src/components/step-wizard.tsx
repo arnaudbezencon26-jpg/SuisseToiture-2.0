@@ -140,6 +140,15 @@ export function StepWizard() {
     }
   };
 
+  const pushStepEvent = (step: number) => {
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).dataLayer.push({
+      event: 'devis_step',
+      devis_step_number: step,
+      devis_step_name: stepTitles[step - 1],
+    });
+  };
+
   const nextStep = () => {
     const validation = validateStep(currentStep);
     if (!validation.isValid) return;
@@ -149,14 +158,18 @@ export function StepWizard() {
     }
 
     if (currentStep < 7) {
-      setCurrentStep((prev) => (prev + 1) as FormStep);
+      const next = (currentStep + 1) as FormStep;
+      setCurrentStep(next);
+      pushStepEvent(next);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => (prev - 1) as FormStep);
+      const prev = (currentStep - 1) as FormStep;
+      setCurrentStep(prev);
+      pushStepEvent(prev);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
