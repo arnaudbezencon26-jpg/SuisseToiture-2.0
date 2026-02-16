@@ -2,8 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function MentionsLegalesPage() {
+  useSEO({
+    title: 'Mentions légales',
+    description: 'Mentions légales de SuisseToiture® - Informations sur l\'entreprise, l\'hébergeur et les conditions d\'utilisation du site.',
+    canonical: 'https://suissetoiture.ch/mentions-legales',
+    noindex: true,
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

@@ -2,8 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function PolitiqueConfidentialitePage() {
+  useSEO({
+    title: 'Politique de confidentialité',
+    description: 'Politique de confidentialité de SuisseToiture® - Comment nous protégeons vos données personnelles.',
+    canonical: 'https://suissetoiture.ch/politique-confidentialite',
+    noindex: true,
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

@@ -5,8 +5,14 @@ import { Footer } from '@/components/footer';
 import { Home, Mail, Phone, ArrowRight, CheckCircle, Star, Award, Thermometer, Leaf, Shield, Droplets, AlertTriangle, TrendingUp, Clock, Wrench, Sparkles, Zap } from 'lucide-react';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function LandingPage() {
+  useSEO({
+    title: 'Expert en nettoyage professionnel à vapeur en Suisse',
+    description: 'SuisseToiture® - Nettoyage de toitures, façades et terrasses à vapeur. Technique écologique sans produits chimiques. Devis gratuit en 24h.',
+    canonical: 'https://suissetoiture.ch/',
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

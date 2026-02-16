@@ -2,8 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function ConditionsGeneralesPage() {
+  useSEO({
+    title: 'Conditions générales',
+    description: 'Conditions générales de vente et d\'utilisation de SuisseToiture® - Prestations de nettoyage à vapeur.',
+    canonical: 'https://suissetoiture.ch/conditions-generales',
+    noindex: true,
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

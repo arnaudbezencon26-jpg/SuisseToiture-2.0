@@ -3,8 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, Mail, MapPin, Clock, User } from 'lucide-react';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function InformationsPage() {
+  useSEO({
+    title: 'Informations et contact',
+    description: 'Contactez SuisseToiture® pour vos projets de nettoyage à vapeur. Téléphone, email et horaires d\'ouverture.',
+    canonical: 'https://suissetoiture.ch/informations',
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

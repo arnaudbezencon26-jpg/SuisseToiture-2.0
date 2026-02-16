@@ -4,8 +4,14 @@ import { Footer } from '@/components/footer';
 import { Home, Mail, Phone } from 'lucide-react';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function HomePage() {
+  useSEO({
+    title: 'Demande de devis gratuit',
+    description: 'Demandez votre devis gratuit pour le nettoyage à vapeur de votre toiture, façade ou terrasse. Réponse en 24h.',
+    canonical: 'https://suissetoiture.ch/devis',
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       {/* Header */}

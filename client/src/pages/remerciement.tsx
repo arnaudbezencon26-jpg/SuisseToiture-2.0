@@ -4,8 +4,15 @@ import { Footer } from '@/components/footer';
 import { Phone, Mail, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
+import { useSEO } from '@/hooks/use-seo';
 
 export default function RemerciementPage() {
+  useSEO({
+    title: 'Merci pour votre demande',
+    description: 'Votre demande de devis a bien été envoyée. SuisseToiture® vous recontactera sous 24h.',
+    canonical: 'https://suissetoiture.ch/remerciement',
+    noindex: true,
+  });
   return (
     <div className="min-h-screen bg-swiss-light">
       <header className="bg-white shadow-sm border-b border-gray-100">
