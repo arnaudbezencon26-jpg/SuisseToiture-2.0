@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ServicesSection } from '@/components/services-section';
 import { Footer } from '@/components/footer';
-import { Home, Mail, Phone, ArrowRight, CheckCircle, Star, Award, Thermometer, Leaf, Shield } from 'lucide-react';
+import { Home, Mail, Phone, ArrowRight, CheckCircle, Star, Award, Thermometer, Leaf, Shield, Droplets, AlertTriangle, TrendingUp, Clock, Wrench, Sparkles, Zap } from 'lucide-react';
 import { Link } from 'wouter';
 import logoPath from '@assets/Logo_Mahmoud-02.png';
 
@@ -55,6 +55,9 @@ export default function LandingPage() {
               Nettoyage professionnel
               <span className="block text-swiss-blue">à vapeur en Suisse</span>
             </h1>
+            <p className="text-lg text-swiss-slate mb-8 max-w-3xl mx-auto">
+              Restaurez l'éclat de votre propriété avec notre technologie vapeur haute performance. Procédé 100% écologique, sans produits chimiques, sans pression agressive.
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/devis">
                 <Button size="lg" className="bg-swiss-blue hover:bg-blue-800 text-lg px-8 py-4">
@@ -126,11 +129,218 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Problem Section */}
+      <section className="py-16 bg-swiss-light">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-0 shadow-lg border-l-4 border-l-swiss-blue">
+            <CardContent className="p-8 md:p-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                Votre toiture subit une double menace : la nature et les mauvaises méthodes.
+              </h2>
+              <p className="text-swiss-slate text-lg leading-relaxed">
+                La mousse, le lichen et la pollution ne sont pas juste inesthétiques. Ce sont des parasites qui rendent vos tuiles poreuses et retiennent l'humidité. Pourtant, le "remède" est souvent pire que le mal : <strong className="text-gray-900">le nettoyage à haute pression (type Kärcher) est proscrit par les fabricants de tuiles</strong>. Il décape la couche protectrice de votre toit, accélère son vieillissement et favorise un retour encore plus rapide de la mousse.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Agitation Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Une toiture poreuse est une bombe à retardement pour votre patrimoine.
+            </h2>
+            <p className="text-lg text-swiss-slate">Si vous ne traitez pas maintenant avec la bonne méthode :</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Droplets className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Infiltrations insidieuses</h3>
+                <p className="text-swiss-slate">L'eau pénètre la structure, menaçant l'isolation et la charpente de votre bâtiment.</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <TrendingUp className="w-8 h-8 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Perte de valeur immobilière</h3>
+                <p className="text-swiss-slate">Une façade terne ou un toit sale dévalorise instantanément votre bien lors d'une estimation.</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="w-8 h-8 text-orange-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Coûts exponentiels</h3>
+                <p className="text-swiss-slate">Une restauration complète de toiture coûte <strong className="text-gray-900">10x plus cher</strong> qu'un entretien préventif spécialisé.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Solution Section */}
+      <section className="py-16 bg-swiss-light">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              La puissance de la chaleur, la douceur pour le support.
+            </h2>
+            <p className="text-lg text-swiss-slate max-w-3xl mx-auto leading-relaxed">
+              SuisseToiture utilise une technologie de pointe unique en Suisse romande. Notre vapeur sèche, projetée à haute température, "cuit" instantanément les racines des mousses et lichens en profondeur, tout en décollant la pollution atmosphérique.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-8 flex items-start gap-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-7 h-7 text-swiss-blue" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Zéro agression mécanique</h3>
+                  <p className="text-swiss-slate">Vos tuiles, crépis et joints restent intacts. Aucun risque de dégradation du support.</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-8 flex items-start gap-4">
+                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Leaf className="w-7 h-7 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Zéro chimie</h3>
+                  <p className="text-swiss-slate">Aucun ruissellement toxique dans votre jardin ou les nappes phréatiques.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Concrete Benefits Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
+            Les 5 bénéfices concrets de notre méthode
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Sparkles, bgColor: 'bg-blue-100', iconColor: 'text-swiss-blue', title: 'Rénovation visuelle immédiate', text: 'Votre maison retrouve son aspect "fin de chantier" dès le premier passage.' },
+              { icon: Zap, bgColor: 'bg-orange-100', iconColor: 'text-orange-600', title: 'Effet curatif durable', text: 'La chaleur stérilise le support, retardant la repousse des micro-organismes bien plus longtemps qu\'un lavage à l\'eau froide.' },
+              { icon: Shield, bgColor: 'bg-green-100', iconColor: 'text-green-600', title: 'Protection du matériau', text: 'Contrairement au chlore ou à la javel, la vapeur ne rend pas les tuiles cassantes.' },
+              { icon: Leaf, bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600', title: 'Respect de vos extérieurs', text: 'Vos plantations, massifs de fleurs et terrasses ne craignent aucune éclaboussure chimique.' },
+              { icon: TrendingUp, bgColor: 'bg-purple-100', iconColor: 'text-purple-600', title: 'Valorisation financière', text: 'Un toit et une façade impeccables rassurent les banques et les acheteurs potentiels.' },
+            ].map((item, i) => (
+              <Card key={i} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className={`w-12 h-12 ${item.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <item.icon className={`w-6 h-6 ${item.iconColor}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">{item.title}</h3>
+                    <p className="text-swiss-slate text-sm leading-relaxed">{item.text}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Who We Are Section */}
+      <section className="py-16 bg-swiss-blue">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              Pourquoi choisir SuisseToiture ?
+            </h2>
+            <p className="text-blue-200 text-lg">L'exigence suisse au service de votre habitat.</p>
+          </div>
+          <p className="text-blue-100 text-center text-lg max-w-3xl mx-auto mb-12 leading-relaxed">
+            Nous ne sommes pas des "jardiniers improvisés nettoyeurs", mais des techniciens spécialisés dans l'enveloppe du bâtiment. Basés localement, nous intervenons sur tout l'arc lémanique avec la rigueur que vous attendez.
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6">
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="w-8 h-8 text-blue-200" />
+              </div>
+              <h3 className="font-bold text-lg text-white mb-2">Société enregistrée</h3>
+              <p className="text-blue-200 text-sm">EL Group Sàrl, une structure fiable et assurée.</p>
+            </div>
+            <div className="text-center p-6">
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-blue-200" />
+              </div>
+              <h3 className="font-bold text-lg text-white mb-2">Devis transparents</h3>
+              <p className="text-blue-200 text-sm">Aucun coût caché, prix ferme avant intervention.</p>
+            </div>
+            <div className="text-center p-6">
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Wrench className="w-8 h-8 text-blue-200" />
+              </div>
+              <h3 className="font-bold text-lg text-white mb-2">Chantier propre</h3>
+              <p className="text-blue-200 text-sm">Nous laissons les lieux impeccables après notre départ (protection des abords, nettoyage des gouttières inclus).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Credibility Section */}
+      <section className="py-16 bg-swiss-light">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-0 shadow-xl">
+            <CardContent className="p-8 md:p-12 text-center">
+              <blockquote className="text-lg md:text-xl text-swiss-slate italic mb-8 leading-relaxed">
+                "Nous investissons dans du matériel industriel de pointe pour garantir un résultat que les méthodes artisanales ne peuvent atteindre. La vapeur est aujourd'hui la seule méthode validée pour nettoyer sans éroder."
+              </blockquote>
+              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8">
+                <div className="flex items-center gap-2 justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-900 font-semibold text-sm">Assurance RC Pro complète</span>
+                </div>
+                <div className="flex items-center gap-2 justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-900 font-semibold text-sm">Intervention Genève & Vaud</span>
+                </div>
+                <div className="flex items-center gap-2 justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-900 font-semibold text-sm">Matériel autonome (camion équipé)</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Urgency Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Card className="border-0 shadow-lg bg-red-50 border border-red-100">
+            <CardContent className="p-8 md:p-12">
+              <Clock className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                N'attendez pas que les dégâts soient irréversibles.
+              </h2>
+              <p className="text-swiss-slate text-lg leading-relaxed max-w-3xl mx-auto">
+                Les mousses actuelles gorgent vos tuiles d'humidité. Avec les cycles de gel/dégel, elles provoquent des micro-fissures invisibles à l'œil nu mais dévastatrices. <strong className="text-gray-900">Agir aujourd'hui, c'est économiser des milliers de francs</strong> de réparations de toiture demain. Nos plannings se remplissent rapidement en raison de la forte demande saisonnière.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-swiss-blue">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Prêt à redonner éclat à vos surfaces ?
+            Protégez votre capital immobilier dès aujourd'hui.
           </h2>
           <p className="text-xl text-blue-100 mb-8">
             Obtenez votre devis personnalisé en moins de 5 minutes
