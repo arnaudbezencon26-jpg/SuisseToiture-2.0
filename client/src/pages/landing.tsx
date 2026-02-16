@@ -131,17 +131,34 @@ export default function LandingPage() {
 
       {/* Problem Section */}
       <section className="py-16 bg-swiss-light">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="border-0 shadow-lg border-l-4 border-l-swiss-blue">
-            <CardContent className="p-8 md:p-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                Votre toiture subit une double menace : la nature et les mauvaises méthodes.
-              </h2>
-              <p className="text-swiss-slate text-lg leading-relaxed">
-                La mousse, le lichen et la pollution ne sont pas juste inesthétiques. Ce sont des parasites qui rendent vos tuiles poreuses et retiennent l'humidité. Pourtant, le "remède" est souvent pire que le mal : <strong className="text-gray-900">le nettoyage à haute pression (type Kärcher) est proscrit par les fabricants de tuiles</strong>. Il décape la couche protectrice de votre toit, accélère son vieillissement et favorise un retour encore plus rapide de la mousse.
-              </p>
-            </CardContent>
-          </Card>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
+            Votre toiture subit une double menace.
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Card className="border-0 shadow-lg border-t-4 border-t-red-500">
+              <CardContent className="p-8">
+                <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-5">
+                  <AlertTriangle className="w-7 h-7 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">La nature attaque</h3>
+                <p className="text-swiss-slate leading-relaxed">
+                  La mousse, le lichen et la pollution ne sont pas juste inesthétiques. Ce sont des parasites qui rendent vos tuiles poreuses et retiennent l'humidité, dégradant votre toiture en silence.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-lg border-t-4 border-t-amber-500">
+              <CardContent className="p-8">
+                <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-5">
+                  <Droplets className="w-7 h-7 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Les mauvaises méthodes aggravent</h3>
+                <p className="text-swiss-slate leading-relaxed">
+                  Le "remède" est souvent pire que le mal : <strong className="text-gray-900">le nettoyage à haute pression (type Kärcher) est proscrit par les fabricants de tuiles</strong>. Il décape la couche protectrice, accélère le vieillissement et favorise un retour encore plus rapide de la mousse.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
