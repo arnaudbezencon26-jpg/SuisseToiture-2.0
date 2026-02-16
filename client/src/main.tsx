@@ -23,16 +23,4 @@ if (gtmId) {
   document.body.insertBefore(noscript, document.body.firstChild);
 }
 
-const gadsId = import.meta.env.VITE_GOOGLE_ADS_ID;
-if (gadsId) {
-  const gtagScript = document.createElement('script');
-  gtagScript.async = true;
-  gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${gadsId}`;
-  document.head.appendChild(gtagScript);
-
-  const gtagInit = document.createElement('script');
-  gtagInit.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gadsId}');`;
-  document.head.appendChild(gtagInit);
-}
-
 createRoot(document.getElementById("root")!).render(<App />);
