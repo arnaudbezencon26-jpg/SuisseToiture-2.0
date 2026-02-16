@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Home, Building, Building2, Leaf, Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Home, Building, Building2, Leaf, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +37,6 @@ const stepTitles = [
   'Superficie',
   'Vos coordonnées',
   'Contact',
-  'Confirmation'
 ];
 
 export function StepWizard() {
@@ -155,9 +154,10 @@ export function StepWizard() {
 
     if (currentStep === 6) {
       submitQuoteMutation.mutate(formData);
+      return;
     }
 
-    if (currentStep < 7) {
+    if (currentStep < 6) {
       const next = (currentStep + 1) as FormStep;
       setCurrentStep(next);
       pushStepEvent(next);
@@ -181,7 +181,7 @@ export function StepWizard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const progressPercentage = (currentStep / 7) * 100;
+  const progressPercentage = (currentStep / 6) * 100;
   const canProceed = validateStep(currentStep).isValid;
 
   return (
@@ -190,7 +190,7 @@ export function StepWizard() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-swiss-slate">
-            Étape {currentStep} sur 7
+            Étape {currentStep} sur 6
           </span>
           <span className="text-sm text-swiss-slate">
             {stepTitles[currentStep - 1]}
@@ -207,11 +207,10 @@ export function StepWizard() {
         {currentStep === 4 && <StepFour formData={formData} updateFormData={updateFormData} />}
         {currentStep === 5 && <StepFive formData={formData} updateFormData={updateFormData} />}
         {currentStep === 6 && <StepSix formData={formData} updateFormData={updateFormData} />}
-        {currentStep === 7 && <StepSeven formData={formData} onReset={resetForm} />}
       </div>
 
       {/* Navigation */}
-      {currentStep < 7 && (
+      {currentStep <= 6 && (
         <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
           <Button
             variant="outline"
@@ -656,84 +655,3 @@ function StepSix({ formData, updateFormData }: { formData: FormData; updateFormD
   );
 }
 
-function StepSeven({ formData, onReset }: { formData: FormData; onReset: () => void }) {
-  const serviceNames = {
-    toiture: 'Toiture',
-    facade: 'Façade',
-    terrasse: 'Terrasse'
-  };
-
-  const projectNames = {
-    maison: 'Maison',
-    immeuble: 'Immeuble'
-  };
-
-  const subServiceNames = {
-    nettoyage: 'Nettoyage',
-    traitement: 'Traitement'
-  };
-
-  return (
-    <div className="text-center">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <Check className="w-8 h-8 text-green-600" />
-      </div>
-      
-      <h2 className="text-3xl font-bold text-gray-900 mb-4">
-        Merci pour votre intérêt !
-      </h2>
-      <p className="text-xl text-swiss-slate mb-8">
-        Nous vous contacterons dans un délai de 24h.
-      </p>
-      
-      <Card className="max-w-2xl mx-auto mb-8">
-        <CardContent className="p-8">
-          <h3 className="font-semibold text-gray-900 mb-4 text-left">
-            Récapitulatif de votre demande :
-          </h3>
-          <div className="space-y-3 text-left text-sm">
-            <div className="flex justify-between">
-              <span className="font-medium">Type de projet :</span>
-              <span>{projectNames[formData.projectType as keyof typeof projectNames]}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Service :</span>
-              <span>{serviceNames[formData.service as keyof typeof serviceNames]}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Interventions :</span>
-              <span>
-                {formData.subServices.map(s => subServiceNames[s as keyof typeof subServiceNames]).join(', ')}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Superficie :</span>
-              <span>{formData.superficie} m²</span>
-            </div>
-            {(formData.nom || formData.prenom || formData.rue || formData.ville) && (
-              <div className="flex justify-between">
-                <span className="font-medium">Adresse :</span>
-                <span className="text-right">{formData.numero} {formData.rue}, {formData.codePostal} {formData.ville}</span>
-              </div>
-            )}
-            
-            {(formData.email || formData.telephone || formData.whatsapp) && (
-              <div className="pt-3 border-t border-gray-200">
-                <div className="font-medium mb-2">Contact :</div>
-                <div className="space-y-1 text-swiss-slate">
-                  {formData.email && <div>Email: {formData.email}</div>}
-                  {formData.telephone && <div>Téléphone: {formData.telephone}</div>}
-                  {formData.whatsapp && <div>WhatsApp: {formData.whatsapp}</div>}
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Button onClick={onReset} className="bg-swiss-blue hover:bg-blue-800">
-        Nouvelle demande
-      </Button>
-    </div>
-  );
-}
