@@ -12,6 +12,7 @@ import { Home, Building, Building2, Leaf, Check, ArrowLeft, ArrowRight } from 'l
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 const initialFormData: FormData = {
   projectType: '',
@@ -43,6 +44,7 @@ export function StepWizard() {
   const [currentStep, setCurrentStep] = useState<FormStep>(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const submitQuoteMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -86,10 +88,8 @@ export function StepWizard() {
       }
     },
     onSuccess: () => {
-      toast({
-        title: "Demande envoyée",
-        description: "Votre demande de devis a été transmise avec succès.",
-      });
+      clearFormData();
+      setLocation('/remerciement');
     },
     onError: () => {
       toast({

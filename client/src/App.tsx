@@ -11,6 +11,7 @@ import InformationsPage from "@/pages/informations";
 import MentionsLegalesPage from "@/pages/mentions-legales";
 import PolitiqueConfidentialitePage from "@/pages/politique-confidentialite";
 import ConditionsGeneralesPage from "@/pages/conditions-generales";
+import RemerciementPage from "@/pages/remerciement";
 import NotFound from "@/pages/not-found";
 
 function ScrollToTop() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/mentions-legales" component={MentionsLegalesPage} />
       <Route path="/politique-confidentialite" component={PolitiqueConfidentialitePage} />
       <Route path="/conditions-generales" component={ConditionsGeneralesPage} />
+      <Route path="/remerciement" component={RemerciementPage} />
       <Route component={NotFound} />
     </Switch>
     </>
