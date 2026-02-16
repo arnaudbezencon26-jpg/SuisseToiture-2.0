@@ -10,6 +10,7 @@ import InformationsPage from "@/pages/informations";
 import MentionsLegalesPage from "@/pages/mentions-legales";
 import PolitiqueConfidentialitePage from "@/pages/politique-confidentialite";
 import ConditionsGeneralesPage from "@/pages/conditions-generales";
+import GoogleAdsLanding from "@/pages/google-ads";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/mentions-legales" component={MentionsLegalesPage} />
       <Route path="/politique-confidentialite" component={PolitiqueConfidentialitePage} />
       <Route path="/conditions-generales" component={ConditionsGeneralesPage} />
+      <Route path="/google-ads" component={GoogleAdsLanding} />
       <Route component={NotFound} />
     </Switch>
   );
