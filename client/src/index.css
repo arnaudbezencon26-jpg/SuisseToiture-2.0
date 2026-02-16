@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: 'Montserrat', 'Inter', system-ui, sans-serif;
+}
+
 :root {
   --background: 210 11% 98%; /* #F8FAFC */
   --foreground: 215 25% 27%; /* #374151 */
